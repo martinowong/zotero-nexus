@@ -10,6 +10,7 @@ declare const window
 
 class Nexus {
   private static readonly DEFAULT_AUTOMATIC_PDF_DOWNLOAD = true
+  private static readonly DEFAULT_HUB_URL = 'https://hub.libstc.cc'
   public PrefPane: PrefPane
   private oldPDFResolverFunction
 
@@ -23,6 +24,31 @@ class Nexus {
     }
 
     return Zotero.Prefs.get('zoteronexus.automatic_pdf_download') as boolean
+  }
+
+  public getHubUrl(): string {
+    const stored = Zotero.Prefs.get('zoteronexus.hub_url') as string | undefined
+    if (stored) {
+      return (stored as string).replace(/\/+$/, '')
+    }
+    return Nexus.DEFAULT_HUB_URL
+  }
+
+  public getNexusResolver(): { name: string; method: string; url: string; mode: string; selector: string; attribute: string; automatic: boolean; timeout: number } {
+    const setting = 'zoteronexus.automatic'
+    if (Zotero.Prefs.get(setting) === undefined) {
+      Zotero.Prefs.set(setting, true)
+    }
+    return {
+      name: 'Nexus',
+      method: 'GET',
+      url: `${this.getHubUrl()}/{doi}.pdf`,
+      mode: 'pdf',
+      selector: '#pdf',
+      attribute: 'src',
+      automatic: Zotero.Prefs.get(setting) as boolean,
+      timeout: 60000,
+    }
   }
 
   public load(): void {
@@ -81,46 +107,36 @@ class Nexus {
       }
 
       if (useCustom && doi) {
-        let customResolvers
+        let customResolvers: any[] = []
         try {
-          customResolvers = Zotero.Prefs.get('findPDFs.resolvers')
-          if (customResolvers) {
-            customResolvers = JSON.parse(customResolvers)
+          const stored = Zotero.Prefs.get('findPDFs.resolvers')
+          if (stored) {
+            const parsed = JSON.parse(stored as string)
+            // Handle single object instead of array
+            if (!Array.isArray(parsed) && (parsed as any).method) {
+              customResolvers = [parsed]
+            } else if (Array.isArray(parsed)) {
+              customResolvers = parsed
+            }
           }
         } catch (e) {
           Zotero.debug('Error parsing custom PDF resolvers', 2)
           Zotero.debug(e, 2)
         }
 
-        if (customResolvers) {
-          // Handle single object instead of array
-          if (!Array.isArray(customResolvers) && customResolvers.method) {
-            customResolvers = [customResolvers]
-          }
-          if (Array.isArray(customResolvers)) {
-            const setting = 'zoteronexus.automatic'
-            if (Zotero.Prefs.get(setting) === undefined) {
-              Zotero.Prefs.set(setting, true)
-            }
+        // Nexus is always appended, even when the user has no custom resolvers
+        // configured. Previously the whole block was skipped when
+        // `findPDFs.resolvers` was empty, so fresh installs never got Nexus.
+        // The hub URL is user-configurable (default https://hub.libstc.cc)
+        // because the public hub is currently unreachable.
+        customResolvers.push(this.getNexusResolver())
+        // Only include resolvers that have opted into automatic processing
+        if (automatic) {
+          customResolvers = customResolvers.filter(r => r.automatic)
+        }
 
-            customResolvers.push(
-              {
-                name: 'Nexus',
-                method: 'GET',
-                url: 'https://hub.libstc.cc/{doi}.pdf',
-                mode: 'pdf',
-                selector: '#pdf',
-                attribute: 'src',
-                automatic:  Zotero.Prefs.get(setting) as boolean,
-                timeout: 60000,
-              })
-            // Only include resolvers that have opted into automatic processing
-            if (automatic) {
-              customResolvers = customResolvers.filter(r => r.automatic)
-            }
-
-            for (const resolver of customResolvers) {
-              try {
+        for (const resolver of customResolvers) {
+          try {
                 let {
                   name,
                   method,
@@ -238,8 +254,6 @@ class Nexus {
                 Zotero.debug(e, 2)
                 Zotero.debug(resolver, 2)
               }
-            }
-          }
         }
       }
 

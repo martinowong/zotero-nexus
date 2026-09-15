@@ -1,24 +1,20 @@
-const path = require('path')
-const fs = require('fs')
-const esbuild = require('esbuild')
-
-require('zotero-plugin/copy-assets')
-require('zotero-plugin/rdf')
-require('zotero-plugin/version')
+const esbuild = require('esbuild');
 
 async function build() {
   await esbuild.build({
     bundle: true,
     format: 'iife',
-    target: ['firefox60'],
-    entryPoints: [ 'content/nexus.ts' ],
-    outdir: 'build/content',
+    target: ['firefox115'],
+    platform: 'browser',
+    entryPoints: ['content/nexus.ts'],
+    outfile: 'build/content/nexus.js',
     banner: { js: 'if (!Zotero.TestZoteroPlugin) {\n' },
     footer: { js: '\n}' },
-  })
+  });
+  console.log('Built build/content/nexus.js');
 }
 
-build().catch(err => {
-  console.log(err)
-  process.exit(1)
-})
+build().catch((err) => {
+  console.error(err);
+  process.exit(1);
+});

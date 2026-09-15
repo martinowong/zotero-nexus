@@ -1,0 +1,19 @@
+<linkset>
+  <html:link rel="localization" href="zotero-nexus.ftl"/>
+</linkset>
+<vbox onload="Zotero.Nexus.PrefPane.initPreferences();">
+  <groupbox>
+    <label><html:h2 data-l10n-id="nexus-prefs-title"></html:h2></label>
+    <hbox align="center">
+      <html:label for="id-zoteronexus-automatic-pdf-download" data-l10n-id="nexus-automatic-pdf-download"></html:label>
+      <checkbox id="id-zoteronexus-automatic-pdf-download"
+        preference="extensions.zotero.zoteronexus.automatic_pdf_download" />
+    </hbox>
+    <hbox align="center">
+      <html:label for="id-zoteronexus-hub-url" data-l10n-id="nexus-hub-url"></html:label>
+      <html:input id="id-zoteronexus-hub-url" style="flex:1"
+        preference="extensions.zotero.zoteronexus.hub_url" />
+    </hbox>
+    <description data-l10n-id="nexus-hub-url-help"></description>
+  </groupbox>
+</vbox>

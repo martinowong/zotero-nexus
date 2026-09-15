@@ -1,0 +1,16 @@
+{
+  "manifest_version": 2,
+  "name": "Zotero Nexus",
+  "version": "1.1.0",
+  "description": "Access scientific literature in Zotero using Nexus/STC search",
+  "homepage_url": "https://github.com/martinowong/zotero-nexus",
+  "author": "aokellermann",
+  "applications": {
+    "zotero": {
+      "id": "zotero-nexus@aokellermann.dev",
+      "update_url": "https://raw.githubusercontent.com/martinowong/zotero-nexus/master/updates.json",
+      "strict_min_version": "7.0",
+      "strict_max_version": "10.*"
+    }
+  }
+}
